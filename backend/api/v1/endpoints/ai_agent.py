@@ -1,9 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from backend.services.ai_reasoning.agent import EstimatorAgentService
+from backend.api.deps import get_agent_service
 
 router = APIRouter()
-agent_service = EstimatorAgentService()
 
 class AgentRequest(BaseModel):
     query: str
@@ -12,7 +12,10 @@ class AgentResponse(BaseModel):
     response: str
 
 @router.post("/chat", response_model=AgentResponse)
-async def chat_with_agent(request: AgentRequest):
+async def chat_with_agent(
+    request: AgentRequest,
+    agent_service: EstimatorAgentService = Depends(get_agent_service)
+):
     """
     Endpoint for Natural-Language Estimator Controls.
     Users can ask the agent to perform estimating tasks, and it will use its tools.

@@ -3,17 +3,16 @@ from sqlalchemy.orm import Session
 import shutil
 import tempfile
 import os
-from backend.core.db import get_db
-from backend.services.docling_parser import DoclingParserService
+from backend.api.deps import get_db, get_parser_service
 
 router = APIRouter()
-parser_service = DoclingParserService()
 
 @router.post("/upload/")
 async def upload_document(
     file: UploadFile = File(...),
     doc_type: str = "spec", # 'plan' or 'spec'
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    parser_service: DoclingParserService = Depends(get_parser_service)
 ):
     if not file.filename.endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
