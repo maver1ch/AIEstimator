@@ -1,5 +1,8 @@
 import streamlit as st
 import requests
+import os
+
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 st.set_page_config(
     page_title="AI Estimating Assistant",
@@ -58,7 +61,7 @@ if prompt := st.chat_input("E.g. What is the price of GYP-001?"):
         message_placeholder = st.empty()
         message_placeholder.markdown("Thinking... ⏳")
         try:
-            res = requests.post("http://localhost:8000/api/v1/agent/chat", json={"query": prompt})
+            res = requests.post(f"{API_URL}/api/v1/agent/chat", json={"query": prompt})
             if res.status_code == 200:
                 answer = res.json()["response"]
                 message_placeholder.markdown(answer)
@@ -70,7 +73,7 @@ if prompt := st.chat_input("E.g. What is the price of GYP-001?"):
 
 # Check Backend Status
 try:
-    response = requests.get("http://localhost:8000/")
+    response = requests.get(f"{API_URL}/")
     if response.status_code == 200:
         st.sidebar.success("Backend: Connected")
     else:
