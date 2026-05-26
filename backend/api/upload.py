@@ -1,9 +1,9 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
 import shutil
-import tempfile
 import os
 from backend.api.deps import get_db, get_parser_service
+from backend.services.docling_parser import DoclingParserService
 
 router = APIRouter()
 
