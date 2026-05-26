@@ -32,11 +32,15 @@ async def upload_document(
             temp_file_path = temp_file.name
 
         # 2. Parse using Docling
+        # Docling is a highly advanced parser capable of understanding document layouts (e.g., multi-column text) 
+        # and accurately extracting complex tables, which is critical for construction Takeoffs.
         logger.info(f"Parsing document: {file.filename}")
         parsed_data = parser_service.parse_pdf(temp_file_path)
         markdown_text = parsed_data["markdown"]
         
-        # 3. Create Document Record
+        # 3. Create Document Record & Extract Tables
+        # We store the extracted tables directly in the metadata JSON so they can be readily
+        # served to the Frontend (Takeoff Tab) without needing to re-parse the PDF.
         tables_json = []
         if "tables" in parsed_data:
             for df in parsed_data["tables"]:
@@ -51,7 +55,9 @@ async def upload_document(
         db.commit()
         db.refresh(db_doc)
 
-        # 4. Chunking
+        # 4. Chunking (Text Splitting)
+        # We split the long markdown into smaller chunks (1000 chars) with a 200 char overlap.
+        # Overlapping prevents cutting off important context (like a spec requirement split between two chunks).
         logger.info("Chunking document text...")
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
@@ -60,12 +66,15 @@ async def upload_document(
         )
         chunks = text_splitter.split_text(markdown_text)
 
-        # 5. Embeddings
+        # 5. Generate Vector Embeddings
+        # We use OpenAI's Embedding model to convert the text chunks into 1536-dimensional float vectors.
+        # This allows us to perform semantic search (understanding meaning, not just keyword matching).
         logger.info(f"Generating embeddings for {len(chunks)} chunks...")
         embeddings_model = OpenAIEmbeddings(api_key=settings.OPENAI_API_KEY)
         embeddings = embeddings_model.embed_documents(chunks)
 
-        # 6. Save Chunks to DB
+        # 6. Save Chunks to Vector Database (pgvector)
+        # The chunks and their corresponding embeddings are stored in PostgreSQL using the pgvector extension.
         db_chunks = []
         for i, (chunk_text, embedding) in enumerate(zip(chunks, embeddings)):
             db_chunk = DocumentChunk(

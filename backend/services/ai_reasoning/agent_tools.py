@@ -23,7 +23,9 @@ def search_specifications(project_id: str, query: str, spec_section: str = None)
         query_embedding = embeddings_model.embed_query(query)
         
         db = SessionLocal()
-        # Search for top 3 closest chunks (cosine distance)
+        # Semantic Search (RAG): We search for the top 3 closest document chunks in the pgvector database.
+        # We use Cosine Distance to measure semantic similarity between the user's query and the document chunks.
+        # This allows finding relevant information even if exact keywords aren't matched.
         results = db.query(DocumentChunk).order_by(
             DocumentChunk.embedding.cosine_distance(query_embedding)
         ).limit(3).all()

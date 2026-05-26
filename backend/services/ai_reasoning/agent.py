@@ -44,9 +44,13 @@ class EstimatorAgentService:
         ])
         
         # Construct the tool calling agent
+        # This creates a Langchain Agent capable of analyzing the user's prompt, 
+        # deciding which tool to use, and executing it deterministically.
         agent = create_tool_calling_agent(self.llm, self.tools, self.prompt)
         
         # Create an agent executor by passing in the agent and tools
+        # The Executor handles the "ReAct" (Reasoning and Acting) loop, ensuring
+        # the Agent can call multiple tools sequentially if needed before returning the final answer.
         self.agent_executor = AgentExecutor(agent=agent, tools=self.tools, verbose=True)
 
     def process_query(self, user_input: str, project_id: str = "default_project") -> str:
