@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import backend.core.logger # Initialize centralized logger
 
 app = FastAPI(
     title="AI Estimating Assistant API",

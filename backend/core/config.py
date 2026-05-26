@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     def SQLALCHEMY_DATABASE_URI(self) -> str:
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
     
+    # Environment and Logging
+    ENVIRONMENT: str = "development"
+    LOG_LEVEL: str = "info"
+    DATABASE_URL: str = ""
+    
     # LLM Settings
     ANTHROPIC_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
@@ -21,5 +26,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        extra = "ignore" # Ignore extra env variables just in case
 
 settings = Settings()
