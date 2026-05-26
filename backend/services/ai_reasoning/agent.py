@@ -33,6 +33,7 @@ class EstimatorAgentService:
             ("system", 
              "You are a highly disciplined Senior Construction Estimator AI. "
              "Your role is to assist human estimators with scope analysis, RFI drafting, and takeoff. "
+             "You are currently working on Project ID: {project_id}. Always pass this project_id exactly when calling tools. "
              "CORE PRINCIPLE: You must NEVER fabricate data, numbers, or prices. "
              "Always use your provided tools to search specifications, lookup prices, or perform math. "
              "If asked to sum up counts, use calculate_takeoff_totals. "
@@ -48,13 +49,13 @@ class EstimatorAgentService:
         # Create an agent executor by passing in the agent and tools
         self.agent_executor = AgentExecutor(agent=agent, tools=self.tools, verbose=True)
 
-    def process_query(self, user_input: str) -> str:
+    def process_query(self, user_input: str, project_id: str = "default_project") -> str:
         """
-        Runs the estimator agent with the user's natural language query.
+        Runs the estimator agent with the user's natural language query and context.
         """
-        logger.info(f"Running Estimator Agent for query: {user_input}")
+        logger.info(f"Running Estimator Agent for query: {user_input} [Project: {project_id}]")
         try:
-            response = self.agent_executor.invoke({"input": user_input})
+            response = self.agent_executor.invoke({"input": user_input, "project_id": project_id})
             return response["output"]
         except Exception as e:
             logger.error(f"Agent execution failed: {str(e)}")

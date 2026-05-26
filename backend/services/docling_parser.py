@@ -22,11 +22,19 @@ class DoclingParserService:
             # Export to markdown as a basic format for chunking
             markdown_text = doc.export_to_markdown()
             
-            # TODO: We can extract tables natively if needed
-            # tables = doc.tables
+            # Extract tables as DataFrames
+            tables = []
+            if hasattr(doc, 'tables'):
+                for table_item in doc.tables:
+                    try:
+                        df = table_item.export_to_dataframe()
+                        tables.append(df)
+                    except Exception as e:
+                        logger.warning(f"Failed to export a table to DataFrame: {e}")
             
             return {
                 "markdown": markdown_text,
+                "tables": tables,
                 "raw_doc": doc
             }
         except Exception as e:

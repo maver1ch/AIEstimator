@@ -7,6 +7,7 @@ router = APIRouter()
 
 class AgentRequest(BaseModel):
     query: str
+    project_id: str = "default_project"
 
 class AgentResponse(BaseModel):
     response: str
@@ -25,7 +26,7 @@ async def chat_with_agent(
         
     try:
         # Run the agent
-        output = agent_service.process_query(request.query)
+        output = agent_service.process_query(request.query, project_id=request.project_id)
         return AgentResponse(response=output)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -23,9 +23,21 @@ if page == "Document Upload":
     
     if st.button("Process Documents"):
         if uploaded_files:
-            st.info("Sending documents to processing pipeline... (Mock UI)")
-            # Add API request logic here
-            st.success("Documents processed successfully!")
+            with st.spinner("Processing documents with Docling & Embeddings..."):
+                for file in uploaded_files:
+                    files = {"file": (file.name, file, "application/pdf")}
+                    data = {"doc_type": "plan"}
+                    try:
+                        res = requests.post(f"{API_URL}/api/v1/upload/", files=files, data=data)
+                        if res.status_code == 200:
+                            data = res.json()
+                            st.success(f"Processed {file.name}: {data['message']}")
+                            if data.get('tables_extracted', 0) > 0:
+                                st.info(f"📊 Extracted {data['tables_extracted']} tables. Check the Takeoff tab!")
+                        else:
+                            st.error(f"Failed to process {file.name}: {res.text}")
+                    except Exception as e:
+                        st.error(f"Connection error: {e}")
         else:
             st.warning("Please upload files first.")
 
@@ -39,7 +51,27 @@ elif page == "Conflict Detection":
 
 elif page == "Takeoff":
     st.header("Schedule-Count Takeoff")
-    st.info("Feature under construction")
+    st.info("Review extracted tables from uploaded documents. You can ask the AI Assistant below to sum up specific items.")
+    
+    try:
+        res = requests.get(f"{API_URL}/api/v1/documents/")
+        if res.status_code == 200:
+            docs = res.json()
+            if not docs:
+                st.write("No documents processed yet. Please upload files in Document Intake.")
+            for doc in docs:
+                with st.expander(f"📄 {doc['filename']} (ID: {doc['id']})", expanded=True):
+                    tables = doc.get('metadata_json', {}).get('extracted_tables', [])
+                    if not tables:
+                        st.write("No tables found in this document.")
+                    else:
+                        for i, table_data in enumerate(tables):
+                            st.write(f"**Table {i+1}**")
+                            st.dataframe(table_data)
+        else:
+            st.error("Failed to load documents.")
+    except Exception as e:
+        st.error(f"Backend not reachable: {e}")
 
 st.markdown("---")
 st.header("💬 AI Estimator Assistant")
